@@ -43,7 +43,7 @@ The Explicit Feature Extractor (EFE) includes a multi-level nonlinear informatio
 The Global Feature Fusion Engine (GFE) takes the extracted node topological structure evolution patterns and the general statistical patterns of edge information and inputs them into a self-attention MLP layer for adaptive dynamic fusion of global information. Finally, the fused global feature representation is passed through an activation function to perform network traffic classification.
 
 **Dataset Description**
-Although datasets such as `Darknet`, `ISCXIDS2012`, and `TrafficLabelling` are mentioned, there is no detailed description of the sources, sizes, formats, etc. If possible, you can add a brief introduction to the datasets, especially how they help validate the performance of the ROEN model.
+Although datasets such as Darknet, ISCXIDS2012, and TrafficLabelling are mentioned, there is no detailed description of the sources, sizes, formats, etc. If possible, you can add a brief introduction to the datasets, especially how they help validate the performance of the ROEN model.
 
 For example:
 ```markdown
