@@ -24,6 +24,10 @@ data_list = [data1, data2, data3]
 # Use concat function to join all dataframes
 data = pd.concat(data_list, ignore_index=True)
 
+# Encode labels
+label_encoder = LabelEncoder()
+label_encoder.fit(data['Label'])
+
 # Parse time stamps
 data['generated'] = pd.to_datetime(data['generated'])
 data['startDateTime'] = pd.to_datetime(data['startDateTime'])
@@ -77,7 +81,7 @@ grouped_data = data.groupby('generated')
 graph_data_seq = []
 for name, group in grouped_data:
     ip_mapping = create_ip_mapping_2012(group)
-    graph_data = create_graph_data_2012(group, ip_mapping, time_window=name)
+    graph_data = create_graph_data_2012(group, ip_mapping, label_encoder, time_window=name)
     graph_data_seq.append(graph_data)
 
 # Initialize device (CPU or GPU)

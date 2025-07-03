@@ -9,9 +9,14 @@ import torch
 import os
 import torch.nn as nn
 import torch.optim as optim
+from sklearn.preprocessing import LabelEncoder
 
-data = pd.read_csv("data/TrafficLabelling/Wednesday-workingHours.pcap_ISCX.csv")
+data = pd.read_csv("data/TrafficLabelling/Tuesday-WorkingHours.pcap_ISCX.csv", encoding='latin1')
 data = data.fillna(method='ffill')
+
+# Encode labels
+label_encoder = LabelEncoder()
+label_encoder.fit(data[' Label'])
 
 # Parse the timestamps
 data[' Timestamp'] = pd.to_datetime(data[' Timestamp'])
@@ -30,7 +35,7 @@ for name, group in grouped_data:
     ip_to_id = create_ip_mapping_2017(group)
     
     # Build graph for the current time window and pass the time window name
-    graph_data_seq.append(create_graph_data_2017(group, ip_to_id, time_window=name))
+    graph_data_seq.append(create_graph_data_2017(group, ip_to_id, label_encoder, time_window=name))
     
 # Initialize device (CPU or GPU)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -79,16 +84,11 @@ def evaluate(model, dataloader):
     # Calculate precision
     precision = 100 * precision_score(all_labels, all_preds, average='weighted')
 
-    # Calculate AUC value (for multi-class tasks, need to One-Hot encode labels)
-    try:
-        auc = roc_auc_score(all_labels, all_preds, multi_class='ovo')
-    except ValueError:
-        auc = float('nan')  # If AUC cannot be calculated, return NaN
         
     model.train()  # Revert model to training mode
  
     # Return evaluation metrics and confusion matrix values
-    return accuracy, precision, recall, f1, auc
+    return accuracy, precision, recall, f1
 
 def train(model, train_dataloader, test_dataloader, optimizer, criterion, num_epochs, eval_interval, save_dir):
     model.train()  # Set the model to training mode
@@ -128,8 +128,8 @@ def train(model, train_dataloader, test_dataloader, optimizer, criterion, num_ep
         
         # Evaluate every eval_interval epochs
         if (epoch + 1) % eval_interval == 0:
-            accuracy, precision, recall, f1, auc = evaluate(model, test_dataloader)
-            print(f'Epoch {epoch+1}/{num_epochs}, Test Accuracy: {accuracy:.2f}%, Precision: {precision:.2f}%, Recall: {recall:.2f}, F1 Score: {f1:.2f}, AUC: {auc:.2f}')
+            accuracy, precision, recall, f1 = evaluate(model, test_dataloader)
+            print(f'Epoch {epoch+1}/{num_epochs}, Test Accuracy: {accuracy:.2f}%, Precision: {precision:.2f}%, Recall: {recall:.2f}, F1 Score: {f1:.2f}')
 
             save_path = os.path.join(save_dir, f'model_epoch_{epoch+1}.pth')
             torch.save(model.state_dict(), save_path)
@@ -142,7 +142,7 @@ model = ROEN(node_in_channels=1,
             hidden_channels_node=128,
             hidden_channels_edge=128, 
             mlp_hidden_channels=128, 
-            num_edge_classes=6).to(device)
+            num_edge_classes=3).to(device)
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)

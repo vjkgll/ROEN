@@ -9,9 +9,14 @@ import torch
 import os
 import torch.nn as nn
 import torch.optim as optim
+from sklearn.preprocessing import LabelEncoder
 
 data = pd.read_csv("data/Darknet/Darknet.csv")
 data.drop(columns=['Label.1'], inplace=True)
+
+# Encode labels
+label_encoder = LabelEncoder()
+label_encoder.fit(data['Label'])
 
 # Parse timestamps
 data['Timestamp'] = pd.to_datetime(data['Timestamp'])
@@ -30,7 +35,7 @@ for name, group in grouped_data:
     ip_to_id = create_ip_mapping_2020(group)
     
     # Build graph for current time window and pass time window name
-    graph_data_seq.append(create_graph_data_2020(group, ip_to_id, time_window=name))
+    graph_data_seq.append(create_graph_data_2020(group, ip_to_id, label_encoder, time_window=name))
     
 # Initialize device (CPU or GPU)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

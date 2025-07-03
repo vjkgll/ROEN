@@ -18,9 +18,9 @@ def create_ip_mapping_2020(time_slice):
     ip_list = pd.concat([time_slice['Src IP'], time_slice['Dst IP']]).unique()
     return {ip: i for i, ip in enumerate(ip_list)}
 
-def create_graph_data_2017(time_slice, ip_to_id, time_window):
+def create_graph_data_2017(time_slice, ip_to_id, label_encoder, time_window):
     
-    label_encoder = LabelEncoder()
+    labels_encoded = label_encoder.transform(time_slice[' Label'])
     
     # Replace Inf with NaN for imputation
     time_slice.replace([np.inf, -np.inf], np.nan, inplace=True)
@@ -61,23 +61,20 @@ def create_graph_data_2017(time_slice, ip_to_id, time_window):
 
     # Convert to tensor
     edge_attr = torch.tensor(edge_attr_df.values, dtype=torch.float)
-    
-    # Use LabelEncoder to encode 'Label' column as integers
-    labels_encoded = label_encoder.fit_transform(time_slice[' Label'])
 
-    # Only process labels if there are edges
+    # 在创建graph_data时使用labels_encoded
     if edge_index.size(1) > 0:
         edge_labels = torch.tensor(labels_encoded, dtype=torch.long)
         graph_data = Data(x=node_features, edge_index=edge_index, edge_attr=edge_attr, edge_labels=edge_labels)
     else:
         print(f"Skipping time window {time_window} as there are no edges")
-        graph_data = None  # Do not create graph if there are no edges
+        graph_data = None
     
     return graph_data
 
-def create_graph_data_2012(time_slice, ip_to_id, time_window):
+def create_graph_data_2012(time_slice, ip_to_id, label_encoder, time_window):
     
-    label_encoder = LabelEncoder()
+    labels_encoded = label_encoder.transform(time_slice['Label'])
     
     # Replace Inf with NaN for imputation
     time_slice.replace([np.inf, -np.inf], np.nan, inplace=True)
@@ -118,9 +115,6 @@ def create_graph_data_2012(time_slice, ip_to_id, time_window):
 
     # Convert to tensor
     edge_attr = torch.tensor(edge_attr_df.values, dtype=torch.float)
-    
-    # Use LabelEncoder to encode 'Label' column as integers
-    labels_encoded = label_encoder.fit_transform(time_slice['Label'])
 
     # Only process labels if there are edges
     if edge_index.size(1) > 0:
@@ -133,9 +127,9 @@ def create_graph_data_2012(time_slice, ip_to_id, time_window):
     return graph_data
 
 
-def create_graph_data_2020(time_slice, ip_to_id, time_window):
+def create_graph_data_2020(time_slice, ip_to_id, label_encoder, time_window):
     
-    label_encoder = LabelEncoder()
+    labels_encoded = label_encoder.transform(time_slice['Label'])
     
     # Replace Inf with NaN for imputation
     time_slice.replace([np.inf, -np.inf], np.nan, inplace=True)
@@ -176,9 +170,6 @@ def create_graph_data_2020(time_slice, ip_to_id, time_window):
 
     # Convert to tensor
     edge_attr = torch.tensor(edge_attr_df.values, dtype=torch.float)
-    
-    # Use LabelEncoder to encode 'Label' column as integers
-    labels_encoded = label_encoder.fit_transform(time_slice['Label'])
 
     # Only process labels if there are edges
     if edge_index.size(1) > 0:
